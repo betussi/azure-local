@@ -1,161 +1,118 @@
-# Azure Local Deployment Guide (v2601)
+# Azure Local Deployment Guide | Guia de Implementação Azure Local (v2601)
 
 ![Azure](https://img.shields.io/badge/Microsoft-Azure-blue)
 ![Version](https://img.shields.io/badge/Azure%20Local-2601-green)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-success)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-Comprehensive deployment guide for Microsoft Azure Local environments integrated with Active Directory and Azure Arc.
+🌎 **Bilingual Documentation (English + Português Brasil)**  
+🌎 **Documentação Bilíngue (English + Português Brasil)**  
 
-Official documentation:
+Official Microsoft documentation / Documentação oficial:  
 https://learn.microsoft.com/en-us/azure/azure-local/deploy/deployment-introduction?view=azloc-2601
 
 ---
 
-## 📌 Overview
+# 🇧🇷 Versão em Português (PT-BR)
 
-Azure Local is full-stack infrastructure software that runs on OEM-validated bare-metal hardware to support virtual machines, containers, and select Azure services with centralized cloud management enabled via Azure Arc.
+## 📌 Visão Geral
 
-This guide provides a structured and production-ready walkthrough for deploying:
+O Azure Local é uma solução de infraestrutura hiperconvergente executada em hardware validado por fabricantes (OEM), permitindo a execução de:
 
-- Azure Local (v2601)
-- Active Directory integration
-- Azure Arc registration
-- Azure Portal deployment
-- Post-deployment validation
+- Máquinas Virtuais
+- Containers
+- Serviços híbridos do Azure
+
+A gestão é centralizada via Azure através do Azure Arc.
 
 ---
 
-## 📦 What’s New in Version 2601
+## 📦 Novidades da Versão 2601
 
-The 2601 release includes:
-
-- Updated OS build
+- Atualização da build do sistema operacional
 - VM Connect (Preview)
-- Rack-aware clustering (GA)
-- Diagnostics log collection from Azure Portal
-- Drift detection framework
-- Security baseline improvements
-- Enhanced pre-upgrade validation checks
+- Cluster com reconhecimento de rack (GA)
+- Coleta de logs via Portal do Azure
+- Framework de detecção de drift
+- Melhorias no baseline de segurança
 
 ---
 
-# 🏗 Architecture Overview
+## 🏗 Arquitetura
 
-Azure Local integrates:
+Integração entre:
 
-- On-premises physical servers
+- Servidores físicos on-premises
 - Active Directory Domain Services
 - Azure Resource Manager
 - Azure Arc
 
-This enables hybrid infrastructure management directly from Azure.
-
 ---
 
-# 1️⃣ Prerequisites
+## 1️⃣ Pré-requisitos
 
-## 1.1 Register Required Resource Provider
-
-Azure Portal → **Subscriptions** → **Resource Providers**
-
-Register:
+Registrar o provider:
 
 ```
 Microsoft.Attestation
 ```
 
-This step is required before first deployment.
+Portal do Azure → Assinaturas → Resource Providers
 
 ---
 
-# 2️⃣ Operating System Installation
+## 2️⃣ Instalação do Sistema Operacional
 
-## 2.1 Download ISO
-
-Download the Azure Local ISO from Azure Portal (latest build available).
-
-## 2.2 Install on Physical Server
-
-Mount ISO using:
-
-- Dell iDRAC
-- Lenovo XClarity
-
-Install the OS (Windows Server–like installation process).
-
-## 2.3 Initial Configuration
-
-After first reboot:
-
-- Set Administrator password (minimum 14 characters required)
-- Configure:
+- Baixar ISO no Portal
+- Montar via iDRAC (Dell) ou XClarity (Lenovo)
+- Instalar como Windows Server
+- Configurar:
+  - Senha (mín. 14 caracteres)
   - Hostname
-  - Static IP address
-  - Default gateway
-  - DNS (Domain Controller IP)
-- Enable RDP access
+  - IP estático
+  - DNS (Domain Controller)
+  - Habilitar RDP
 
 ---
 
-# 3️⃣ Firmware & Driver Updates
+## 3️⃣ Atualização de Firmware
 
-⚠️ Mandatory before deployment.
+Obrigatório antes do deploy.
 
-## Dell
-
-Use Dell System Update (DSU)
-
-## Lenovo
-
-Use Lenovo Update Utility
-
-Ensure firmware, BIOS, NIC and storage drivers are updated.
+- Dell → DSU
+- Lenovo → Lenovo Update Utility
 
 ---
 
-# 4️⃣ Active Directory Preparation
+## 4️⃣ Preparação do Active Directory
 
-## 4.1 Create Dedicated OU
-
-Create a new Organizational Unit for Azure Local objects.
-
-Example:
+Criar OU:
 
 ```
-OU=AzureLocal,DC=company,DC=local
+OU=AzureLocal,DC=empresa,DC=local
 ```
 
----
-
-## 4.2 Create Deployment Service Account
-
-Run on the Domain Controller:
+Executar no DC:
 
 ```powershell
-$password = ConvertTo-SecureString 'StrongPassword14+!' -AsPlainText -Force
+$password = ConvertTo-SecureString 'SenhaForteCom14+!' -AsPlainText -Force
 $user = "azurehciuservs"
 
 $credential = New-Object System.Management.Automation.PSCredential ($user, $password)
 
 New-HciAdObjectsPreCreation `
 -AzureStackLCMUserCredential $credential `
--AsHciOUName "OU=AzureLocal,DC=company,DC=local"
+-AsHciOUName "OU=AzureLocal,DC=empresa,DC=local"
 ```
-
-This creates the required service account and AD objects.
 
 ---
 
-# 5️⃣ Azure Arc Registration
-
-Run on the Azure Local server:
+## 5️⃣ Registro no Azure Arc
 
 ```powershell
-# Variables
 $Subscription = "<subscription-id>"
 $RG = "RG-AzureLocal"
-$Region = "eastus"   # lowercase, no spaces
+$Region = "eastus"
 $Tenant = "<tenant-id>"
 
 Connect-AzAccount -SubscriptionId $Subscription -TenantId $Tenant -DeviceCode
@@ -173,88 +130,168 @@ Invoke-AzStackHciArcInitialization `
 -AccountID $id
 ```
 
-Validate in:
-
-Azure Portal → Azure Arc → Machines
-
-Status must show: **Connected**
+Validar: Azure Arc → Máquinas → Status **Connected**
 
 ---
 
-# 6️⃣ Deploy Azure Local Instance
+## 6️⃣ Deploy da Instância
 
-In Azure Portal:
+Portal → Azure Local → Criar
 
-Search → Azure Local → Create → Azure Local Instance
-
-## Important Configuration Notes
-
-- Instance name must differ from hostname
-- Select network model: `Compute_Storage`
-- Custom Location must differ from:
-  - Hostname
-  - Instance name
-
-Follow the wizard until deployment completes.
+⚠️ Nome da instância ≠ Hostname  
+⚠️ Modelo de rede: `Compute_Storage`
 
 ---
 
-# 7️⃣ Post-Deployment
+## 🔐 Boas Práticas
 
-After successful deployment, you can configure:
+- Senhas fortes
+- Menor privilégio
+- Atualizações aplicadas
+- Evitar credenciais em texto plano
+
+---
+
+# 🇺🇸 English Version
+
+## 📌 Overview
+
+Azure Local is a hyperconverged infrastructure solution running on OEM-validated hardware, enabling:
 
 - Virtual Machines
-- AKS
-- Azure Virtual Desktop
-- Azure Site Recovery
-- Backup and Monitoring integrations
+- Containers
+- Hybrid Azure services
+
+Centralized management is enabled via Azure Arc.
 
 ---
 
-# 🔐 Security Best Practices
+## 📦 What’s New in 2601
 
-- Use strong passwords (minimum 14 characters)
-- Do not hardcode production credentials
-- Use Azure Key Vault where applicable
-- Apply least privilege access model
-- Keep firmware and OS patched
-
----
-
-# 🧪 Validation Checklist
-
-✔ Resource Provider Registered  
-✔ Firmware Updated  
-✔ AD Objects Created  
-✔ Azure Arc Connected  
-✔ Azure Local Instance Deployed  
+- OS build update
+- VM Connect (Preview)
+- Rack-aware clustering (GA)
+- Portal-based diagnostics collection
+- Drift detection framework
+- Security baseline improvements
 
 ---
 
-# 🧾 CHANGELOG
+## 🏗 Architecture
 
-## 1.0.1 – Updated for 2601
-- Documentation updated to latest version
-- New features section added
-- Security and validation improvements
+Integration between:
 
----
-
-# ⚠️ Disclaimer
-
-This repository is community-maintained and is not an official Microsoft publication.
+- On-premises physical servers
+- Active Directory Domain Services
+- Azure Resource Manager
+- Azure Arc
 
 ---
 
-# 📜 License
+## 1️⃣ Prerequisites
 
-MIT License
+Register provider:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files...
+```
+Microsoft.Attestation
+```
 
-# 👨‍💻 Author
+Azure Portal → Subscriptions → Resource Providers
+
+---
+
+## 2️⃣ Operating System Installation
+
+- Download ISO from Azure Portal
+- Mount via iDRAC (Dell) or XClarity (Lenovo)
+- Install OS
+- Configure:
+  - Password (min 14 characters)
+  - Hostname
+  - Static IP
+  - DNS (Domain Controller)
+  - Enable RDP
+
+---
+
+## 3️⃣ Firmware Updates
+
+Mandatory before deployment.
+
+- Dell → DSU
+- Lenovo → Lenovo Update Utility
+
+---
+
+## 4️⃣ Active Directory Preparation
+
+Create OU:
+
+```
+OU=AzureLocal,DC=company,DC=local
+```
+
+Run on Domain Controller:
+
+```powershell
+$password = ConvertTo-SecureString 'StrongPassword14+!' -AsPlainText -Force
+$user = "azurehciuservs"
+
+$credential = New-Object System.Management.Automation.PSCredential ($user, $password)
+
+New-HciAdObjectsPreCreation `
+-AzureStackLCMUserCredential $credential `
+-AsHciOUName "OU=AzureLocal,DC=company,DC=local"
+```
+
+---
+
+## 5️⃣ Azure Arc Registration
+
+```powershell
+$Subscription = "<subscription-id>"
+$RG = "RG-AzureLocal"
+$Region = "eastus"
+$Tenant = "<tenant-id>"
+
+Connect-AzAccount -SubscriptionId $Subscription -TenantId $Tenant -DeviceCode
+
+$ARMtoken = (Get-AzAccessToken).Token
+$id = (Get-AzContext).Account.Id
+
+Invoke-AzStackHciArcInitialization `
+-SubscriptionID $Subscription `
+-ResourceGroup $RG `
+-TenantID $Tenant `
+-Region $Region `
+-Cloud "AzureCloud" `
+-ArmAccessToken $ARMtoken `
+-AccountID $id
+```
+
+Validate in Azure Arc → Machines → Status **Connected**
+
+---
+
+## 🔐 Security Best Practices
+
+- Strong passwords
+- Least privilege model
+- Keep firmware and OS updated
+- Avoid hardcoded credentials
+
+---
+
+# ⚠️ Disclaimer | Aviso
+
+This repository is community-maintained and is not an official Microsoft publication.  
+Este repositório é mantido pela comunidade e não é uma publicação oficial da Microsoft.
+
+---
+
+# 👨‍💻 Author | Autor
 
 **Rodrigo Felipe Betussi**  
 Cloud & Infrastructure Specialist  
 Microsoft Certified Professional  
-Last update: January 2026
+Last update / Última atualização: January 2026
