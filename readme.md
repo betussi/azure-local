@@ -54,7 +54,18 @@ Integração entre:
 Registrar o provider:
 
 ```
-Microsoft.Attestation
+Register-AzResourceProvider -ProviderNamespace "Microsoft.HybridCompute" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.GuestConfiguration" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.HybridConnectivity" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.AzureStackHCI" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Kubernetes" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.KubernetesConfiguration" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.ExtendedLocation" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.ResourceConnector" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.HybridContainerService"
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Attestation"
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Storage"
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Insights"
 ```
 
 Portal do Azure → Assinaturas → Resource Providers
@@ -193,7 +204,18 @@ Integration between:
 Register provider:
 
 ```
-Microsoft.Attestation
+Register-AzResourceProvider -ProviderNamespace "Microsoft.HybridCompute" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.GuestConfiguration" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.HybridConnectivity" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.AzureStackHCI" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Kubernetes" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.KubernetesConfiguration" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.ExtendedLocation" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.ResourceConnector" 
+Register-AzResourceProvider -ProviderNamespace "Microsoft.HybridContainerService"
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Attestation"
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Storage"
+Register-AzResourceProvider -ProviderNamespace "Microsoft.Insights"
 ```
 
 Azure Portal → Subscriptions → Resource Providers
