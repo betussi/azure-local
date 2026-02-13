@@ -1,30 +1,37 @@
-# Azure Local Deployment Guide (v2508)
+# Azure Local Deployment Guide (v2601)
 
 ![Azure](https://img.shields.io/badge/Microsoft-Azure-blue)
-![Version](https://img.shields.io/badge/Azure%20Local-2508-green)
+![Version](https://img.shields.io/badge/Azure%20Local-2601-green)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-success)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-Community-driven deployment guide for Microsoft Azure Local environments integrated with Active Directory and Azure Arc.
+Comprehensive deployment guide for Microsoft Azure Local environments integrated with Active Directory and Azure Arc.
+
+Official documentation:
+https://learn.microsoft.com/en-us/azure/azure-local/deploy/deployment-introduction?view=azloc-2601
 
 ---
 
 ## 📌 Overview
 
-This guide provides a structured and production-ready walkthrough for deploying:
-
-- Azure Local (v2508)
-- Active Directory integration
-- Azure Arc registration
-- Azure Portal deployment
-- Post-deployment validation
-
-Official Microsoft documentation:
-https://learn.microsoft.com/en-us/azure/azure-local/deploy/deployment-introduction?view=azloc-2508
+Azure Local is full-stack infrastructure software that runs on OEM-validated bare-metal hardware to support virtual machines, containers, and select Azure services with central cloud management enabled via Azure Arc. :contentReference[oaicite:1]{index=1}
 
 ---
 
-# 🏗 Architecture Summary
+## 📦 What’s New in Version 2601
+
+The January 2026 2601 release includes:
+
+- OS version update: Azure Local nodes now run OS build **26100.32230**. :contentReference[oaicite:2]{index=2}  
+- **VM Connect (Preview):** Connect to VMs with no network or boot failures. :contentReference[oaicite:3]{index=3}  
+- **Rack aware clustering (GA):** Local availability zones at rack level. :contentReference[oaicite:4]{index=4}  
+- **Diagnostics log collection** from Azure Portal. :contentReference[oaicite:5]{index=5}  
+- **Drift detection framework** for component state validation. :contentReference[oaicite:6]{index=6}  
+- Security baseline updates and pre-upgrade validation enhancements. :contentReference[oaicite:7]{index=7}
+
+---
+
+## 🏗 Architecture Overview
 
 Azure Local integrates:
 
@@ -37,13 +44,11 @@ This enables hybrid infrastructure management directly from Azure.
 
 ---
 
-# 1️⃣ Prerequisites
+## 1️⃣ Prerequisites
 
-## 1.1 Register Required Resource Provider
+### Register Required Resource Provider
 
-In Azure Portal:
-
-Subscriptions → Resource Providers
+Azure Portal → **Subscriptions** → **Resource Providers**
 
 Register:
 
@@ -51,62 +56,53 @@ Register:
 Microsoft.Attestation
 ```
 
-This step is mandatory for first-time deployments in the subscription.
+This step is required before first deployment.
 
 ---
 
-# 2️⃣ Operating System Installation
+## 2️⃣ Operating System Installation
 
-## 2.1 Download ISO
+### Download ISO
 
-Download the latest Azure Local ISO from Azure Portal.
+Download the Azure Local ISO from Azure Portal (OS build **26100.32230** or later).
 
-## 2.2 Install on Physical Server
+### Install on Physical Server
 
 Mount ISO using:
 
-- Dell iDRAC
-- Lenovo XClarity
+- iDRAC (Dell)
+- XClarity (Lenovo)
 
-Install the OS (Windows Server–like installation process).
+Configure:
 
-## 2.3 Initial Configuration
-
-After first reboot:
-
-- Set Administrator password (minimum 14 characters required)
-- Configure:
-  - Hostname
-  - Static IP address
-  - Default gateway
-  - DNS (Domain Controller IP)
-- Enable RDP access
+- Administrator password (min 14 characters)
+- Hostname
+- Static IP
+- Gateway
+- DNS (Domain Controller)
+- Enable RDP
 
 ---
 
-# 3️⃣ Firmware and Driver Updates
+## 3️⃣ Firmware & Driver Updates
 
-⚠️ Mandatory before Azure Local deployment.
+⚠️ Mandatory before deployment.
 
-## Dell
+### Dell
 
-Use:
-- Dell System Update (DSU)
+Use Dell System Update (DSU)
 
-## Lenovo
+### Lenovo
 
-Use:
-- Lenovo Update Utility
+Use Lenovo Update Utility
 
-Ensure all firmware, BIOS, NIC and storage drivers are updated.
+Ensure firmware, NIC and storage drivers are up-to-date.
 
 ---
 
-# 4️⃣ Active Directory Preparation
+## 4️⃣ Active Directory Preparation
 
-## 4.1 Create Dedicated OU
-
-Create a new Organizational Unit for Azure Local objects.
+### Create Organizational Unit
 
 Example:
 
@@ -114,9 +110,9 @@ Example:
 OU=AzureLocal,DC=company,DC=local
 ```
 
----
+### Create Deployment Service Account
 
-## 4.2 Run PowerShell on Domain Controller
+Run on the Domain Controller:
 
 ```powershell
 $password = ConvertTo-SecureString 'StrongPassword14+!' -AsPlainText -Force
@@ -129,29 +125,26 @@ New-HciAdObjectsPreCreation `
 -AsHciOUName "OU=AzureLocal,DC=company,DC=local"
 ```
 
-This will automatically create the required service account and AD objects.
+This creates the required service account and AD objects.
 
 ---
 
-# 5️⃣ Azure Arc Registration
+## 5️⃣ Azure Arc Registration
 
-Run on the Azure Local server:
+Run on Azure Local server:
 
 ```powershell
-# Define variables
+# Variables
 $Subscription = "<subscription-id>"
 $RG = "RG-AzureLocal"
-$Region = "eastus"   # use lowercase, no spaces
+$Region = "eastus"
 $Tenant = "<tenant-id>"
 
-# Authenticate
 Connect-AzAccount -SubscriptionId $Subscription -TenantId $Tenant -DeviceCode
 
-# Retrieve tokens
 $ARMtoken = (Get-AzAccessToken).Token
 $id = (Get-AzContext).Account.Id
 
-# Initialize Arc
 Invoke-AzStackHciArcInitialization `
 -SubscriptionID $Subscription `
 -ResourceGroup $RG `
@@ -162,101 +155,73 @@ Invoke-AzStackHciArcInitialization `
 -AccountID $id
 ```
 
-Validate in:
+Validate in Azure Portal → Azure Arc → Machines.
 
-Azure Portal → Azure Arc → Machines
-
-Status must show: **Connected**
+Status must show **Connected**.
 
 ---
 
-# 6️⃣ Deploy Azure Local Instance
+## 6️⃣ Deploy Azure Local Instance
 
 In Azure Portal:
 
-Search → Azure Local → Create → Azure Local Instance
+**Search** → Azure Local → **Create** → Azure Local Instance
 
-## Important Configuration Notes
+### Important Notes
 
 - Instance name must differ from hostname
-- Select network model: `Compute_Storage`
-- Custom Location must differ from:
-  - Hostname
-  - Instance name
+- Network model: `Compute_Storage`
+- Custom Location must differ from hostname and instance name
 
-Follow the wizard until deployment completes.
+Follow the wizard until provisioning completes.
 
 ---
 
-# 7️⃣ Post-Deployment
+## 7️⃣ Post-Deployment
 
-After successful deployment, you can configure:
+After deployment, you can configure and manage:
 
 - Virtual Machines
 - AKS
 - Azure Virtual Desktop
-- Azure Site Recovery
-- Backup and Monitoring integrations
+- Site Recovery
+- Monitoring & Diagnostics
 
 ---
 
-# 🔐 Security Best Practices
+## 🔍 Known Issues & Considerations
 
-- Use strong passwords (minimum 14 characters)
-- Do not hardcode production credentials
-- Use Azure Key Vault where applicable
-- Apply least privilege access model
-- Keep firmware and OS patched
+Review the latest known issues before deployment — these include important considerations for Azure Local releases. :contentReference[oaicite:8]{index=8}
 
 ---
 
-# 🧪 Validation Checklist
+## 🔐 Security Best Practices
 
-✔ Resource Provider Registered  
-✔ Firmware Updated  
-✔ AD Objects Created  
-✔ Azure Arc Connected  
-✔ Azure Local Instance Deployed  
-
----
-
-# 📁 Suggested Repository Structure
-
-```
-azure-local-deployment-guide/
-│
-├── README.md
-├── CHANGELOG.md
-├── LICENSE
-└── docs/
-```
+- Use strong passwords (min 14 characters)
+- Avoid hardcoding credentials
+- Use Azure Key Vault where possible
+- Apply least privileged access
+- Keep OS and firmware patched
 
 ---
 
-# 🧾 CHANGELOG
+## 🧾 CHANGELOG
 
-## 1.0.0 – Initial Release
-- Azure Local version 2508
-- Full deployment workflow
-- Active Directory integration
-- Azure Arc onboarding
-- Production-ready structure
+### 1.0.1 – Updated for 2601
+- Added 2601 new features section
+- Updated OS build references and requirements
+- Known issues section
 
 ---
 
-# ⚠️ Disclaimer
+## ⚠️ Disclaimer
 
-This repository is community-maintained and is not an official Microsoft publication.
+This repository is community-maintained and not an official Microsoft publication.
 
 ---
 
-# 📜 License
+## 📜 License
 
 MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files...
-
----
-
-**Author:** Rodrigo Betussi  
-**Last Update:** 16/09/2025  
